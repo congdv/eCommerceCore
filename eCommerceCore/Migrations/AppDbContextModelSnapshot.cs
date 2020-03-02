@@ -73,9 +73,11 @@ namespace eCommerceCore.Migrations
 
                     b.Property<string>("ImagePath");
 
-                    b.Property<string>("Pricing");
+                    b.Property<double>("Pricing");
 
                     b.Property<string>("ProductName");
+
+                    b.Property<double>("ShippingCost");
 
                     b.HasKey("Id");
 

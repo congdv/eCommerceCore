@@ -38,7 +38,13 @@ namespace eCommerceCore.Controllers
             return "no";
         }
 
-       
+        // GET: api/Cart/5
+        [HttpGet("{id}", Name = "Get")]
+        public string Get(int id)
+        {
+            return "value";
+        }
+
         // POST: api/Cart
         [HttpPost]
         public void Post([FromBody] string value)

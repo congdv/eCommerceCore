@@ -28,11 +28,11 @@ namespace eCommerceCore.Controllers
 
             try
             {
-                if(!context.Users.Any(u => u.Email == user.Email))
+                if(!context.Users.Any(u => u.Email == user.Email || u.Username == user.Username))
                 {
                     var emailValidator = new EmailAddressAttribute();
-
-                    if(emailValidator.IsValid(user.Email) &&
+                    
+                    if (emailValidator.IsValid(user.Email) &&
                         !string.IsNullOrEmpty(user.Password) &&
                         !string.IsNullOrEmpty(user.Username))
                     {
@@ -44,16 +44,17 @@ namespace eCommerceCore.Controllers
                     }
                     else
                     {
-                        resp.Message = "String cannot be empty";
+                        throw new Exception("Email, Password, and Username are required");
                     }
                 }
                 else
                 {
-                    resp.Message = "An Account with this email already exists";
+                    throw new Exception("Email/Username is already exists");
                 }
-            }catch
+            }catch (Exception exception)
             {
-                resp.Message = "An internal error occured. Please try again.";
+                resp.Message = exception.Message;
+                resp.Success = false;
             }
 
             return resp;
