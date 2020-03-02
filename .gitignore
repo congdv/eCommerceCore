@@ -341,3 +341,4 @@ healthchecksdb
 
 # For Core Project
 **/appsettings.json
+**/Migrations/*
