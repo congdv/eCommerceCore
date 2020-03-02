@@ -10,7 +10,8 @@ namespace eCommerceCore.Models
         public int Id { get; set; }
         public string Description { get; set; }
         public string ImagePath { get; set; }
-        public string Pricing { get; set; }
+        public double Pricing { get; set; }
         public string ProductName { get; set; }
+        public double ShippingCost { get; set; }
     }
 }

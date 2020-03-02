@@ -25,7 +25,7 @@ namespace eCommerceCore.Controllers
 
             try
             {
-                var user = context.Users.FirstOrDefault(u => u.Email == data.Email);
+                var user = context.Users.FirstOrDefault(u => u.Username == data.Username);
                 
                 if(user != null)
                 {
@@ -37,7 +37,15 @@ namespace eCommerceCore.Controllers
 
                         resp.Success = true;
                         resp.Message = "Successfully Login";
+                    } else
+                    {
+                        resp.Success = false;
+                        resp.Message = "Wrong Password";
                     }
+                } else
+                {
+                    resp.Success = false;
+                    resp.Message = "Wrong Username";
                 }
             }catch (Exception exception)
             {
@@ -51,7 +59,7 @@ namespace eCommerceCore.Controllers
 
     public class LoginData
     {
-        public string Email { get; set; }
+        public string Username { get; set; }
         public string Password { get; set; }
     }
 
