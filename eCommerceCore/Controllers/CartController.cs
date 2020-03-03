@@ -21,8 +21,8 @@ namespace eCommerceCore.Controllers
         public CartController(AppDbContext context) => this.context = context;
 
         // GET: api/Cart
-        [HttpGet()]
-        async public Task<string> Get()
+        [HttpGet]
+        async public Task<IEnumerable<ProductObject>> Get()
         {
             var userId = HttpContext.Session.GetInt32("UserId");
 
@@ -30,12 +30,21 @@ namespace eCommerceCore.Controllers
             var cartId = await context.Carts
                                 .FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
 
-            //get productId for that User
-            //var query = from id in Cart
-            //            join CartDetailsId in CartDetails on CartDetailsId equals cartId
-            //            select new { ProductId = CartDetails.ProductId };
-
-            return "no";
+            //get products for that User 
+            await ( from c in context.Carts
+                    join p in context.Products on c.Id equals p.Id
+                    where c.Id == cartId.Id
+                    select new ProductObject
+                    {
+                        Id = p.Id,
+                        Description = p.Description,
+                        //getImage
+                        Pricing = p.Pricing,
+                        ShippingCost = p.ShippingCost,
+                        Name = p.ProductName
+                    }).ToListAsync();
+            //return as an Object
+            return context.ProductObjects.ToList();
         }
 
         // GET: api/Cart/5
@@ -62,5 +71,15 @@ namespace eCommerceCore.Controllers
         public void Delete(int id)
         {
         }
+    }
+
+    public class ProductObject
+    {
+        public int Id { get; set; }
+        public string Description { get; set; }
+        //getImage
+        public double Pricing { get; set; }
+        public double ShippingCost { get; set; }
+        public string Name { get; set; }
     }
 }
