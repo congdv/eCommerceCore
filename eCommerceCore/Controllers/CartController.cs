@@ -10,6 +10,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace eCommerceCore.Controllers
 {
+    
+
     [Route("api/[controller]")]
     [ApiController]
 
@@ -17,8 +19,9 @@ namespace eCommerceCore.Controllers
     public class CartController : ControllerBase
     {
         private readonly AppDbContext context;
+        
 
-        public CartController(AppDbContext context) => this.context = context;
+        public CartController(AppDbContext context) => this.context = context; 
 
         // GET: api/Cart
         [HttpGet]
@@ -56,8 +59,53 @@ namespace eCommerceCore.Controllers
 
         // POST: api/Cart
         [HttpPost]
-        public void Post([FromBody] string value)
+        async public void Post([FromBody] ProductObject data)
         {
+            var resp = new Response { };
+            try
+            {                
+                //get the user
+                var userId = HttpContext.Session.GetInt32("UserId");
+
+                //get Current CartId
+                var cartId = await context.Carts
+                                    .FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
+
+                if (cartId != null)
+                {
+                    var productId = context.ProductObjects.FirstOrDefault(p => p.Id == data.Id);
+                    if (productId != null)
+                    {
+                        //check product existance in product table
+                        var productExist = await context.Products
+                                    .FirstOrDefaultAsync(p => p.Id == productId.Id);
+                        if (productExist != null)
+                        {
+                            //fetch all the data from that row
+                            //insert userid, cartid, productid, quantities into cartdetails
+                        }
+                        else
+                        {
+                            resp.Success = false;
+                            resp.Message = "Product Do Not Exist";
+                        }
+                    }
+                    else
+                    {
+                        resp.Success = false;
+                        resp.Message = "Product Not Found";
+                    }
+                }
+                else
+                {
+                    //create new cartId for the User
+                }
+            }catch(Exception exception)
+            {
+                resp.Success = false;
+                resp.Message = exception.Message;
+            }
+            
         }
 
         // PUT: api/Cart/5
@@ -81,5 +129,12 @@ namespace eCommerceCore.Controllers
         public double Pricing { get; set; }
         public double ShippingCost { get; set; }
         public string Name { get; set; }
+        public int Quantities { get; set; }
+    }
+
+    public class Response
+    {
+        public bool Success { get; set; }
+        public string Message { get; set; }
     }
 }
