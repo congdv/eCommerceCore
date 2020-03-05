@@ -36,6 +36,10 @@ namespace eCommerceCore.Controllers
                         !string.IsNullOrEmpty(user.Password) &&
                         !string.IsNullOrEmpty(user.Username))
                     {
+                        if(user.Password.Length <=8 )
+                        {
+                            throw new Exception("The length of password should be at least 8 characters");
+                        }
                         user.Password = PasswordHash.HashPassword(user.Password);
                         await context.Users.AddAsync(user);
                         await context.SaveChangesAsync();
@@ -64,6 +68,7 @@ namespace eCommerceCore.Controllers
         [HttpPut("{id}")]
         public void Put(int id, [FromBody] string value)
         {
+            
         }
 
         // DELETE: api/ApiWithActions/5

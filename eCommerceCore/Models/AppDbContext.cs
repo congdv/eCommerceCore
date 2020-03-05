@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using eCommerceCore.Controllers;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,5 +29,7 @@ namespace eCommerceCore.Models
         public DbSet<Cart> Carts { get; set; }
         
         public DbSet<Product>  Products { get; set; }
+
+        public DbSet<ProductObject> ProductObjects { get; set; }
     }
 }

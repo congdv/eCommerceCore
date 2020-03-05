@@ -19,11 +19,11 @@ namespace eCommerceCore.Controllers
         }
 
         // GET: api/Product/5
-        [HttpGet("{id}", Name = "GetProducts")]
-        public string Get(int id)
-        {
-            return "value";
-        }
+        //[HttpGet("{id}", Name = "GetProducts")]
+        //public string Get(int id)
+        //{
+        //    return "value";
+        //}
 
         // POST: api/Product
         [HttpPost]
