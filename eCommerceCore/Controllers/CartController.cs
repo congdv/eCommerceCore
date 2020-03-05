@@ -10,17 +10,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace eCommerceCore.Controllers
 {
-    
-
     [Route("api/[controller]")]
     [ApiController]
-
 
     public class CartController : ControllerBase
     {
         private readonly AppDbContext context;
-        
-
         public CartController(AppDbContext context) => this.context = context; 
 
         // GET: api/Cart
@@ -83,6 +78,7 @@ namespace eCommerceCore.Controllers
                         {
                             //fetch all the data from that row
                             //insert userid, cartid, productid, quantities into cartdetails
+                            
                         }
                         else
                         {
