@@ -31,5 +31,6 @@ namespace eCommerceCore.Models
         public DbSet<Product>  Products { get; set; }
 
         public DbSet<ProductObject> ProductObjects { get; set; }
+      //  public DbSet<UpdateData> UpdateDatas { get; set; }
     }
 }
