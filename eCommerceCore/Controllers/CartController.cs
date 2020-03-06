@@ -45,8 +45,8 @@ namespace eCommerceCore.Controllers
             return context.ProductObjects.ToList();
         }
 
-        // GET: api/Cart/5
         [HttpGet("{id}")]
+
         public string Get(int id)
         {
             return "value";

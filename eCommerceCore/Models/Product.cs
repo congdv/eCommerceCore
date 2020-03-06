@@ -13,5 +13,10 @@ namespace eCommerceCore.Models
         public double Pricing { get; set; }
         public string ProductName { get; set; }
         public double ShippingCost { get; set; }
+
+        public static explicit operator Product(Task<Product> v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
