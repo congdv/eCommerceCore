@@ -29,20 +29,20 @@ namespace eCommerceCore.Controllers
                                 .FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
 
             //get products for that User 
-            await ( from c in context.Carts
-                    join p in context.Products on c.Id equals p.Id
-                    where c.Id == cartId.Id
-                    select new ProductObject
-                    {
-                        Id = p.Id,
-                        Description = p.Description,
-                        ImagePath = p.ImagePath,
-                        Pricing = p.Pricing,
-                        ShippingCost = p.ShippingCost,
-                        Name = p.ProductName
-                    }).ToListAsync();
+            await (from c in context.Carts
+                   join p in context.Products on c.Id equals p.Id
+                   where c.Id == cartId.Id
+                   select new ProductObject
+                   {
+                       Id = p.Id,
+                       Description = p.Description,
+                       ImagePath = p.ImagePath,
+                       Pricing = p.Pricing,
+                       ShippingCost = p.ShippingCost,
+                       Name = p.ProductName
+                   }).ToListAsync();
             //return as an Object
-            return context.ProductObjects.ToList();
+            return context.ProductObjects.ToList(); 
         }
 
         [HttpGet("{id}")]
@@ -58,12 +58,12 @@ namespace eCommerceCore.Controllers
         {
             var resp = new Response { };
             try
-            {                
+            {
                 //get the user
-                var userId = HttpContext.Session.GetInt32("UserId");  
+                var userId = HttpContext.Session.GetInt32("UserId");
 
                 //check if userId is null
-                if(userId == null)
+                if (userId == null)
                 {
                     throw new Exception("Login Failed");
                 }
@@ -74,15 +74,11 @@ namespace eCommerceCore.Controllers
 
                 if (cartId != null)
                 {
-                    int check = data.ProductId;
-                    int checkQ = data.Quantities;
                     //check product existance in product table
                     var productExist = await context.Products
                                 .FirstOrDefaultAsync(p => p.Id == data.ProductId);
                     if (productExist != null)
                     {
-                        //fetch all the data from that row
-                        //insert userid, cartid, productid, quantities into cartdetails
                         CartDetails cartDetails = new CartDetails
                         {
                             //id = null,
@@ -98,14 +94,14 @@ namespace eCommerceCore.Controllers
                     else
                     {
                         resp.Success = false;
-                        resp.Message = "Product Do Not Exist";
+                        resp.Message = "Product Does't Exist";
                     }
                 }
                 else
                 {
                     //List<CartDetails> cartDetails = new List<CartDetails>();
                     //cartDetails.Add(new CartDetails { ProductId = 1, CurrentPrice = 20, Quantities = 10 });
-                    ////create new cartId for the User
+                    //create new cartId for the User
                     Cart userCart = new Cart
                     {
                         UserId = (int)userId,
@@ -121,18 +117,13 @@ namespace eCommerceCore.Controllers
                     //context.CartsDetails.Add(new CartDetails { CurrentPrice = 20, Quantities = 10});
                     //context.SaveChanges();
                 }
-            }catch(Exception exception)
+            }
+            catch (Exception exception)
             {
                 resp.Success = false;
                 resp.Message = exception.Message;
             }
             return resp;
-        }
-
-        // PUT: api/Cart/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
         }
 
         // DELETE: api/ApiWithActions/5
