@@ -30,6 +30,6 @@ namespace eCommerceCore.Models
         public DbSet<CartDetails> CartsDetails { get; set; }
         public DbSet<Product>  Products { get; set; }
         public DbSet<ProductObject> ProductObjects { get; set; }
-      //  public DbSet<UpdateData> UpdateDatas { get; set; }
+        public DbSet<Comment> Comments { get; set; }
     }
 }
