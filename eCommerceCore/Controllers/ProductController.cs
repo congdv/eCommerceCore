@@ -14,8 +14,6 @@ namespace eCommerceCore.Controllers
     {
         private readonly AppDbContext context;
         public ProductController(AppDbContext context) => this.context = context;
-                              
-
 
         // GET: api/product
         [HttpGet]
@@ -47,7 +45,7 @@ namespace eCommerceCore.Controllers
                 }
                 else if (product == null)
                 {
-                    return Ok(new { success = false, message = "Product Not Found!" });
+                    return BadRequest(new { success = false, message = "Product Not Found!" });
                 }
                 else
                 {
