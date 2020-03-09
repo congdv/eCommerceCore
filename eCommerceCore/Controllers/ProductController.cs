@@ -2,45 +2,63 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using eCommerceCore.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace eCommerceCore.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/Product")]
     [ApiController]
     public class ProductController : ControllerBase
     {
-        // GET: api/Product
+        private readonly AppDbContext context;
+        public ProductController(AppDbContext context) => this.context = context;
+                              
+
+
+        // GET: api/product
         [HttpGet]
-        public IEnumerable<string> Get()
+        public ActionResult<List<Product>> Get()
         {
-            return new string[] { "value1", "value2" };
+            try
+            {
+                List<Product> product = context.Products.ToList();
+                return product;
+            }
+            catch (Exception)
+            {
+                return BadRequest(new { success = false, message = "Invalid Request" });
+            }
         }
 
         // GET: api/Product/5
-        //[HttpGet("{id}", Name = "GetProducts")]
-        //public string Get(int id)
-        //{
-        //    return "value";
-        //}
-
-        // POST: api/Product
-        [HttpPost]
-        public void Post([FromBody] string value)
+        [HttpGet("{id}", Name = "GetProduct")]
+        public ActionResult<Product> Get(int id)
         {
-        }
+            try
+            {
+                int productId = id;
+                var product = context.Products.FirstOrDefault(prod => prod.Id == id);
 
-        // PUT: api/Product/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
-        }
-
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
+                if (id.GetType() == typeof(System.String))
+                {
+                    return BadRequest(new { success = false, message = "Invalid Request" });
+                }
+                else if (product == null)
+                {
+                    return Ok(new { success = false, message = "Product Not Found!" });
+                }
+                else
+                {
+                    return (Product)product;
+                }
+                
+            }
+            catch(Exception)
+            {
+                return BadRequest(new { success = false, message = "Invalid Request" });
+            }
         }
     }
 }

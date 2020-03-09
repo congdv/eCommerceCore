@@ -29,24 +29,23 @@ namespace eCommerceCore.Controllers
                                 .FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
 
             //get products for that User 
-            await ( from c in context.Carts
-                    join p in context.Products on c.Id equals p.Id
-                    where c.Id == cartId.Id
-                    select new ProductObject
-                    {
-                        Id = p.Id,
-                        Description = p.Description,
-                        //getImage
-                        Pricing = p.Pricing,
-                        ShippingCost = p.ShippingCost,
-                        Name = p.ProductName
-                    }).ToListAsync();
+            await (from c in context.Carts
+                   join p in context.Products on c.Id equals p.Id
+                   where c.Id == cartId.Id
+                   select new ProductObject
+                   {
+                       Id = p.Id,
+                       Description = p.Description,
+                       ImagePath = p.ImagePath,
+                       Pricing = p.Pricing,
+                       ShippingCost = p.ShippingCost,
+                       Name = p.ProductName
+                   }).ToListAsync();
             //return as an Object
-            return context.ProductObjects.ToList();
+            return context.ProductObjects.ToList(); 
         }
 
-        // GET: api/Cart/5
-        [HttpGet("{id}", Name = "GetCart")]
+        [HttpGet("{id}")]
         public string Get(int id)
         {
             return "value";
@@ -54,60 +53,76 @@ namespace eCommerceCore.Controllers
 
         // POST: api/Cart
         [HttpPost]
-        async public void Post([FromBody] ProductObject data)
+        async public Task<Response> Post([FromBody] ProductObject data)
         {
             var resp = new Response { };
             try
-            {                
+            {
                 //get the user
                 var userId = HttpContext.Session.GetInt32("UserId");
 
+                //check if userId is null
+                if (userId == null)
+                {
+                    throw new Exception("Login Failed");
+                }
+
                 //get Current CartId
                 var cartId = await context.Carts
-                                    .FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
+                                    .FirstOrDefaultAsync(b => b.CartStatus == false && b.UserId == userId);
 
                 if (cartId != null)
                 {
-                    var productId = context.ProductObjects.FirstOrDefault(p => p.Id == data.Id);
-                    if (productId != null)
+                    //check product existance in product table
+                    var productExist = await context.Products
+                                .FirstOrDefaultAsync(p => p.Id == data.ProductId);
+                    if (productExist != null)
                     {
-                        //check product existance in product table
-                        var productExist = await context.Products
-                                    .FirstOrDefaultAsync(p => p.Id == productId.Id);
-                        if (productExist != null)
+                        CartDetails cartDetails = new CartDetails
                         {
-                            //fetch all the data from that row
-                            //insert userid, cartid, productid, quantities into cartdetails
-                            
-                        }
-                        else
-                        {
-                            resp.Success = false;
-                            resp.Message = "Product Do Not Exist";
-                        }
+                            //id = null,
+                            ProductId = productExist.Id,
+                            CartId = cartId.Id,
+                            Quantities = data.Quantities
+                        };
+                        context.CartsDetails.Add(cartDetails);
+                        context.SaveChanges();
+                        resp.Success = true;
+                        resp.Message = "Cart Found and Product Saved successfully";
                     }
                     else
                     {
                         resp.Success = false;
-                        resp.Message = "Product Not Found";
+                        resp.Message = "Product Does't Exist";
                     }
                 }
                 else
                 {
+                    //List<CartDetails> cartDetails = new List<CartDetails>();
+                    //cartDetails.Add(new CartDetails { ProductId = 1, CurrentPrice = 20, Quantities = 10 });
                     //create new cartId for the User
+                    Cart userCart = new Cart
+                    {
+                        UserId = (int)userId,
+                        CartStatus = false,
+                        ShippingAddress = null,
+                        PaymentMethod = null,
+                        PurchasedDate = DateTime.Now
+                    };
+                    context.Carts.Add(userCart);
+                    context.SaveChanges();
+                    resp.Success = true;
+                    resp.Message = "Cart created successfully";
+                    //context.CartsDetails.Add(new CartDetails { CurrentPrice = 20, Quantities = 10});
+                    //context.SaveChanges();
                 }
-            }catch(Exception exception)
+            }
+            catch (Exception exception)
             {
                 resp.Success = false;
                 resp.Message = exception.Message;
             }
-            
-        }
-
-        // PUT: api/Cart/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody] string value)
-        {
+            return resp;
         }
 
         // DELETE: api/ApiWithActions/5
@@ -116,16 +131,16 @@ namespace eCommerceCore.Controllers
         {
         }
     }
-
     public class ProductObject
     {
         public int Id { get; set; }
         public string Description { get; set; }
-        //getImage
+        public string ImagePath { get; set; }
         public double Pricing { get; set; }
         public double ShippingCost { get; set; }
         public string Name { get; set; }
         public int Quantities { get; set; }
+        public int ProductId { get; set; }
     }
 
     public class Response
