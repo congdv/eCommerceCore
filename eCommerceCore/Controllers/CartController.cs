@@ -42,7 +42,7 @@ namespace eCommerceCore.Controllers
                        Name = p.ProductName
                    }).ToListAsync();
             //return as an Object
-            return context.ProductObjects.ToList(); 
+            return null; 
         }
 
         [HttpGet("{id}")]

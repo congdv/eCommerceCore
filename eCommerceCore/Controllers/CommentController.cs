@@ -22,12 +22,12 @@ namespace eCommerceCore.Controllers
         {
             try
             {
-                List<Comment> productComment = context.Comments.ToList();
-                if (productComment == null)
+                List<Comment> comments = context.Comments.ToList();
+                if (comments == null)
                 {
                     return BadRequest(new { success = false, message = "Comments not found" });
                 }
-                return Ok(productComment);
+                return Ok(comments);
             }
             catch (Exception)
             {
@@ -39,18 +39,12 @@ namespace eCommerceCore.Controllers
         [HttpPost]
         public async Task<IActionResult> CommentPost([FromBody] CommentData data)
         {
-            var resp = new CommentResponse { Success = true };
-            var userID = HttpContext.Session.GetInt32("UserId");
-
-            if (userID == null)
-            {
-                throw new Exception("Invalid comment authentication");
-            }
+            var userID = data.UserId;
             //get cart id
             var cartId = await context.Carts.FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userID);
             if (cartId == null)
             {
-                return BadRequest(new { success = false, message = "User is not purchased the product" });
+                return BadRequest(new { success = false, message = "User did not purchased the product" });
             }
             Comment comment = new Comment
             {
