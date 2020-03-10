@@ -45,7 +45,7 @@ namespace eCommerceCore.Controllers
                            Name = p.ProductName
                        }).ToListAsync();
 
-                resp.Data = context.ProductObjects.ToList();
+                resp.Data = null;
             }
             catch (Exception exception)
             {

@@ -29,7 +29,5 @@ namespace eCommerceCore.Models
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartDetails> CartsDetails { get; set; }
         public DbSet<Product>  Products { get; set; }
-        public DbSet<ProductObject> ProductObjects { get; set; }
-      //  public DbSet<UpdateData> UpdateDatas { get; set; }
     }
 }
