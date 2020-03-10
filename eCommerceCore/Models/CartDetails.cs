@@ -8,7 +8,7 @@ namespace eCommerceCore.Models
 {
     public class CartDetails
     {
-        public int id { get; set; }
+        public int Id { get; set; }
 
         [ForeignKey("Product")]
         public int ProductId { get; set; }
