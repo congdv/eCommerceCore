@@ -46,7 +46,9 @@ namespace eCommerceCore.Controllers
                                    ImagePath = p.ImagePath,
                                    Pricing = p.Pricing,
                                    ShippingCost = p.ShippingCost,
-                                   Name = p.ProductName
+                                   Name = p.ProductName,
+                                   ProductId = p.Id,
+                                   Quantities = cd.Quantities
                                }).ToList();
                     resp.Data = products;
                     resp.Success = true;
@@ -63,7 +65,8 @@ namespace eCommerceCore.Controllers
             }
             return resp;
         }
-        
+
+
         // POST: api/Cart
         [HttpPost]
         async public Task<Response> Post([FromBody] ProductObject data)
@@ -172,7 +175,6 @@ namespace eCommerceCore.Controllers
         public double ShippingCost { get; set; }
         public string Name { get; set; }
         public int Quantities { get; set; }
-        public int CurrentPrice { get; set; }
         public int ProductId { get; set; }
     }
 
