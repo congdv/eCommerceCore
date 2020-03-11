@@ -29,23 +29,32 @@ namespace eCommerceCore.Controllers
 
                 //get cartId of User's cart
                 var cartId = await context.Carts
-                                    .FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
+                                    .FirstOrDefaultAsync(b => b.CartStatus == false && b.UserId == userId);
 
-                //get products for that User 
-                await (from c in context.Carts
-                       join p in context.Products on c.Id equals p.Id
-                       where c.Id == cartId.Id
-                       select new ProductObject
-                       {
-                           Id = p.Id,
-                           Description = p.Description,
-                           ImagePath = p.ImagePath,
-                           Pricing = p.Pricing,
-                           ShippingCost = p.ShippingCost,
-                           Name = p.ProductName
-                       }).ToListAsync();
-
-                resp.Data = context.ProductObjects.ToList();
+                if (cartId != null)
+                {
+                    List<ProductObject> products = new List<ProductObject>();
+                    //get products for that User 
+                    products = (from c in context.Carts
+                               join cd in context.CartsDetails on c.Id equals cd.CartId
+                               join p in context.Products on cd.ProductId equals p.Id
+                               where c.Id == cartId.Id
+                               select new ProductObject
+                               {
+                                   Id = p.Id,
+                                   Description = p.Description,
+                                   ImagePath = p.ImagePath,
+                                   Pricing = p.Pricing,
+                                   ShippingCost = p.ShippingCost,
+                                   Name = p.ProductName
+                               }).ToList();
+                    resp.Data = products;
+                    resp.Success = true;
+                }
+                else
+                {
+                    throw new Exception("Cart Not Found");
+                }
             }
             catch (Exception exception)
             {
@@ -90,11 +99,10 @@ namespace eCommerceCore.Controllers
                     {
                         CartDetails cartDetails = new CartDetails
                         {
-                            //id = null,
                             ProductId = productExist.Id,
                             CartId = cartId.Id,
-                            Quantities = data.Quantities
-                            //price
+                            Quantities = data.Quantities,
+                            CurrentPrice = data.CurrentPrice
                         };
                         await context.CartsDetails.AddAsync(cartDetails);
                         context.SaveChanges();
@@ -109,30 +117,44 @@ namespace eCommerceCore.Controllers
                 }
                 else
                 {
-                    //List<CartDetails> cartDetails = new List<CartDetails>();
-                    //cartDetails.Add(new CartDetails { ProductId = 1, CurrentPrice = 20, Quantities = 10 });
-                    //create new cartId for the User
-                    var userCart = new Cart()
+                    try
                     {
-                        UserId = (int)userId,
-                        CartStatus = false,
-                        ShippingAddress = null,
-                        PaymentMethod = null,
-                        PurchasedDate = DateTime.Now
-                    };
-                    await context.Carts.AddAsync(userCart);
+                        //check product existance in product table
+                        var productExist = await context.Products
+                                    .FirstOrDefaultAsync(p => p.Id == data.ProductId);
 
-                    //add cartdetails with the created cartId as a foreign key
-                    await context.CartsDetails.AddAsync(new CartDetails() { Cart = userCart, Quantities = data.Quantities, ProductId = 1 });
-                    await context.SaveChangesAsync();
-                    resp.Success = true;
-                    resp.Message = "Cart created successfully";
+                        if (productExist != null)
+                        {
+                            //create new cartId for the User
+                            var userCart = new Cart()
+                            {
+                                UserId = (int)userId,
+                                CartStatus = false,
+                                ShippingAddress = null,
+                                PaymentMethod = null,
+                                PurchasedDate = DateTime.Now
+                            };
+                            await context.Carts.AddAsync(userCart);
+                            //add cartdetails with the created cartId as a foreign key
+                            await context.CartsDetails.AddAsync(new CartDetails() { Cart = userCart, Quantities = data.Quantities, ProductId = productExist.Id, CurrentPrice = data.CurrentPrice });
+                            await context.SaveChangesAsync();
 
-
-                    //context.CartsDetails.Add(new CartDetails { CurrentPrice = 20, Quantities = 10});
-                    //context.SaveChanges();
-
-                   
+                            resp.Success = true;
+                            resp.Message = "Cart created successfully";
+                        }
+                        //context.CartsDetails.Add(new CartDetails { CurrentPrice = 20, Quantities = 10});
+                        //context.SaveChanges();
+                        else
+                        {
+                            resp.Success = false;
+                            resp.Message = "Product Does't Exist";
+                        }
+                    }
+                    catch (Exception exception)
+                    {
+                        resp.Success = false;
+                        resp.Message = exception.Message;
+                    }               
                 }
             }
             catch (Exception exception)
@@ -158,6 +180,7 @@ namespace eCommerceCore.Controllers
         public double ShippingCost { get; set; }
         public string Name { get; set; }
         public int Quantities { get; set; }
+        public int CurrentPrice { get; set; }
         public int ProductId { get; set; }
     }
 
