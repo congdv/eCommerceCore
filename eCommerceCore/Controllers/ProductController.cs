@@ -51,12 +51,57 @@ namespace eCommerceCore.Controllers
                 {
                     return (Product)product;
                 }
-                
+
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return BadRequest(new { success = false, message = "Invalid Request" });
             }
         }
+
+        
+        // POST: api/Product/Add
+        [HttpPost]
+        public async Task<RegisterResponse> Post([FromBody] Product product)
+        {
+
+            var resp = new RegisterResponse { Success = false };
+
+            try
+            {
+                if (!string.IsNullOrEmpty(product.Description) &&
+                    !string.IsNullOrEmpty(product.ImagePath) &&
+                    !string.IsNullOrEmpty(product.ProductName) &&
+                    product.Pricing != 0 &&
+                    product.ShippingCost != 0)
+                {
+                    await context.Products.AddAsync(product);
+                    await context.SaveChangesAsync();
+                    resp.Success = true;
+                    resp.Message = "Successfully added new product";
+                }
+
+                else
+                {
+                    throw new Exception("All specs for the product are required");
+                }
+            }
+
+            catch (Exception exception)
+            {
+                resp.Message = exception.Message;
+                resp.Success = false;
+            }
+
+            return resp;
+
+        }
+
+        public class ProductResponse
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; }
+        }
     }
+
 }
