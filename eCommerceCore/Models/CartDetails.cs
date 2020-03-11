@@ -20,6 +20,6 @@ namespace eCommerceCore.Models
         public int ProductId { get; set; }
         public virtual Product Product { get; set; }
         public int Quantities { get; set; }
-        public int CurrentPrice { get; set; }
+        public double CurrentPrice { get; set; }
     }
 }

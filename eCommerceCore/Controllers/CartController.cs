@@ -63,13 +63,7 @@ namespace eCommerceCore.Controllers
             }
             return resp;
         }
-
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
+        
         // POST: api/Cart
         [HttpPost]
         async public Task<Response> Post([FromBody] ProductObject data)
@@ -102,7 +96,7 @@ namespace eCommerceCore.Controllers
                             ProductId = productExist.Id,
                             CartId = cartId.Id,
                             Quantities = data.Quantities,
-                            CurrentPrice = data.CurrentPrice
+                            CurrentPrice = productExist.Pricing
                         };
                         await context.CartsDetails.AddAsync(cartDetails);
                         context.SaveChanges();
@@ -136,14 +130,12 @@ namespace eCommerceCore.Controllers
                             };
                             await context.Carts.AddAsync(userCart);
                             //add cartdetails with the created cartId as a foreign key
-                            await context.CartsDetails.AddAsync(new CartDetails() { Cart = userCart, Quantities = data.Quantities, ProductId = productExist.Id, CurrentPrice = data.CurrentPrice });
+                            await context.CartsDetails.AddAsync(new CartDetails() { Cart = userCart, Quantities = data.Quantities, ProductId = productExist.Id, CurrentPrice = productExist.Pricing });
                             await context.SaveChangesAsync();
 
                             resp.Success = true;
                             resp.Message = "Cart created successfully";
                         }
-                        //context.CartsDetails.Add(new CartDetails { CurrentPrice = 20, Quantities = 10});
-                        //context.SaveChanges();
                         else
                         {
                             resp.Success = false;
