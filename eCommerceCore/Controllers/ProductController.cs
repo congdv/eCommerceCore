@@ -83,7 +83,8 @@ namespace eCommerceCore.Controllers
 
                 else
                 {
-                    throw new Exception("All specs for the product are required");
+                    resp.Success = false;
+                    resp.Message = "All product specs not provided";
                 }
             }
 
