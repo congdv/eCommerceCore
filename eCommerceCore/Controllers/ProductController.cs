@@ -72,8 +72,7 @@ namespace eCommerceCore.Controllers
                 if (!string.IsNullOrEmpty(product.Description) &&
                     !string.IsNullOrEmpty(product.ImagePath) &&
                     !string.IsNullOrEmpty(product.ProductName) &&
-                    product.Pricing != 0 &&
-                    product.ShippingCost != 0)
+                    product.Pricing != 0)
                 {
                     await context.Products.AddAsync(product);
                     await context.SaveChangesAsync();
