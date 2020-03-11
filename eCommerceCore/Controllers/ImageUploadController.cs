@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -13,42 +11,35 @@ namespace eCommerceCore.Controllers
     [ApiController]
     public class ImageUploadController : ControllerBase
     {
-        public static IHostingEnvironment _environment;
-        public ImageUploadController(IHostingEnvironment environment)
-        {
-            _environment = environment;
-        }
-
         [HttpPost]
-        public async Task<ImageUploadResponse> Post(FIleUploadAPI files)
+        public async Task<ImageUploadResponse> Post([FromQuery]FIleUploadAPI uploadFile)
         {
-            var resp = new ImageUploadResponse{ Success = false };
-            if (files.files.Length > 0)
+            var resp = new ImageUploadResponse { Success = false, Message = "No file to upload" };
+            if (uploadFile.file.Length > 0)
             {
                 try
                 {
-                    if (!Directory.Exists(_environment.WebRootPath + "\\assessts\\images\\"))
+                    int index = uploadFile.file.FileName.LastIndexOf(".");
+                    string extn = uploadFile.file.FileName.Substring(index);
+                    var filePath = Path.Combine("wwwroot\\assesst", Path.GetRandomFileName() + extn);
+                    using (var stream = new FileStream(filePath, FileMode.Create))
                     {
-                        Directory.CreateDirectory(_environment.WebRootPath + "\\assessts\\images\\");
-                    }
-                    using (FileStream filestream = System.IO.File.Create(_environment.WebRootPath + "\\assessts\\images\\" + files.files.FileName))
-                    {
-                        files.files.CopyTo(filestream);
-                        filestream.Flush();
+                        await uploadFile.file.CopyToAsync(stream);
+                        
                         resp.Success = true;
-                        resp.Message = "\\assessts\\images\\" + files.files.FileName;
+                        resp.Message = filePath.ToString();
                     }
                 }
                 catch (Exception ex)
                 {
-                    resp.Message = ex.Message;
                     resp.Success = false;
+                    resp.Message = ex.Message;
                 }
             }
             else
             {
                 resp.Success = false;
-                resp.Message = "No Image to upload";
+                resp.Message = "No file to upload";
             }
             return resp;
         }
@@ -62,6 +53,7 @@ namespace eCommerceCore.Controllers
 
     public class FIleUploadAPI
     {
-        public IFormFile files { get; set; }
+        public IFormFile file { get; set; }
     }
 }
+
