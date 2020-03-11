@@ -20,29 +20,39 @@ namespace eCommerceCore.Controllers
 
         // GET: api/Cart
         [HttpGet]
-        async public Task<IEnumerable<ProductObject>> Get()
+        async public Task<Response> Get()
         {
-            var userId = HttpContext.Session.GetInt32("UserId");
+            var resp = new Response { };
+            try
+            {
+                var userId = HttpContext.Session.GetInt32("UserId");
 
-            //get cartId of User's cart
-            var cartId = await context.Carts
-                                .FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
+                //get cartId of User's cart
+                var cartId = await context.Carts
+                                    .FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
 
-            //get products for that User 
-            await (from c in context.Carts
-                   join p in context.Products on c.Id equals p.Id
-                   where c.Id == cartId.Id
-                   select new ProductObject
-                   {
-                       Id = p.Id,
-                       Description = p.Description,
-                       ImagePath = p.ImagePath,
-                       Pricing = p.Pricing,
-                       ShippingCost = p.ShippingCost,
-                       Name = p.ProductName
-                   }).ToListAsync();
-            //return as an Object
-            return context.ProductObjects.ToList(); 
+                //get products for that User 
+                await (from c in context.Carts
+                       join p in context.Products on c.Id equals p.Id
+                       where c.Id == cartId.Id
+                       select new ProductObject
+                       {
+                           Id = p.Id,
+                           Description = p.Description,
+                           ImagePath = p.ImagePath,
+                           Pricing = p.Pricing,
+                           ShippingCost = p.ShippingCost,
+                           Name = p.ProductName
+                       }).ToListAsync();
+
+                resp.Data = null;
+            }
+            catch (Exception exception)
+            {
+                resp.Success = false;
+                resp.Message = exception.Message;
+            }
+            return resp;
         }
 
         [HttpGet("{id}")]
@@ -84,8 +94,9 @@ namespace eCommerceCore.Controllers
                             ProductId = productExist.Id,
                             CartId = cartId.Id,
                             Quantities = data.Quantities
+                            //price
                         };
-                        context.CartsDetails.Add(cartDetails);
+                        await context.CartsDetails.AddAsync(cartDetails);
                         context.SaveChanges();
                         resp.Success = true;
                         resp.Message = "Cart Found and Product Saved successfully";
@@ -101,7 +112,7 @@ namespace eCommerceCore.Controllers
                     //List<CartDetails> cartDetails = new List<CartDetails>();
                     //cartDetails.Add(new CartDetails { ProductId = 1, CurrentPrice = 20, Quantities = 10 });
                     //create new cartId for the User
-                    Cart userCart = new Cart
+                    var userCart = new Cart()
                     {
                         UserId = (int)userId,
                         CartStatus = false,
@@ -109,12 +120,19 @@ namespace eCommerceCore.Controllers
                         PaymentMethod = null,
                         PurchasedDate = DateTime.Now
                     };
-                    context.Carts.Add(userCart);
-                    context.SaveChanges();
+                    await context.Carts.AddAsync(userCart);
+
+                    //add cartdetails with the created cartId as a foreign key
+                    await context.CartsDetails.AddAsync(new CartDetails() { Cart = userCart, Quantities = data.Quantities, ProductId = 1 });
+                    await context.SaveChangesAsync();
                     resp.Success = true;
                     resp.Message = "Cart created successfully";
+
+
                     //context.CartsDetails.Add(new CartDetails { CurrentPrice = 20, Quantities = 10});
                     //context.SaveChanges();
+
+                   
                 }
             }
             catch (Exception exception)
@@ -147,5 +165,7 @@ namespace eCommerceCore.Controllers
     {
         public bool Success { get; set; }
         public string Message { get; set; }
+
+        public List<ProductObject> Data { get; set; }
     }
 }
