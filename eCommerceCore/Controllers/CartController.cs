@@ -73,7 +73,7 @@ namespace eCommerceCore.Controllers
 
         // POST: api/Cart
         [HttpPost]
-        async public Task<Response> Post([FromBody] ProductObject data)
+        async public Task<IActionResult> Post([FromBody] ProductObject data)
         {
             var resp = new Response { };
             try
@@ -84,7 +84,7 @@ namespace eCommerceCore.Controllers
                 //check if userId is null
                 if (userId == null)
                 {
-                    throw new Exception("Login Failed");
+                    return BadRequest(new { success = false, message = "Login Failed" });
                 }
                 
                 //get Current CartId
@@ -93,27 +93,35 @@ namespace eCommerceCore.Controllers
 
                 if (cartId != null)
                 {
-                    //check product existance in product table
-                    var productExist = await context.Products
-                                .FirstOrDefaultAsync(p => p.Id == data.ProductId);
-                    if (productExist != null)
+                    //check for data
+                    if (data.ProductId > 0 && data.Quantities > 0)
                     {
-                        CartDetails cartDetails = new CartDetails
+                        //check product existance in product table
+                        var productExist = await context.Products
+                                    .FirstOrDefaultAsync(p => p.Id == data.ProductId);
+                        if (productExist != null)
                         {
-                            ProductId = productExist.Id,
-                            CartId = cartId.Id,
-                            Quantities = data.Quantities,
-                            CurrentPrice = productExist.Pricing
-                        };
-                        await context.CartsDetails.AddAsync(cartDetails);
-                        context.SaveChanges();
-                        resp.Success = true;
-                        resp.Message = "Cart Found and Product Saved successfully";
+                            CartDetails cartDetails = new CartDetails
+                            {
+                                ProductId = productExist.Id,
+                                CartId = cartId.Id,
+                                Quantities = data.Quantities,
+                                CurrentPrice = productExist.Pricing
+                            };
+                            await context.CartsDetails.AddAsync(cartDetails);
+                            context.SaveChanges();
+                            resp.Success = true;
+                            resp.Message = "Cart Found and Product Saved successfully";
+                        }
+                        else
+                        {
+                            resp.Success = false;
+                            resp.Message = "Product Does't Exist";
+                        }
                     }
                     else
                     {
-                        resp.Success = false;
-                        resp.Message = "Product Does't Exist";
+                        return BadRequest(new { success = false, data = resp.Data });
                     }
                 }
                 else
@@ -161,7 +169,7 @@ namespace eCommerceCore.Controllers
                 resp.Success = false;
                 resp.Message = exception.Message;
             }
-            return resp;
+            return Ok(new { success = resp.Success });
         }
 
         // DELETE: api/ApiWithActions/5
