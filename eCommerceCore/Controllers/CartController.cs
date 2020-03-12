@@ -20,12 +20,18 @@ namespace eCommerceCore.Controllers
 
         // GET: api/Cart
         [HttpGet]
-        async public Task<Response> Get()
+        async public Task<IActionResult> Get()
         {
             var resp = new Response { };
             try
             {
                 var userId = HttpContext.Session.GetInt32("UserId");
+
+                //check if userId is null
+                if (userId == null)
+                {
+                    return BadRequest(new { success = false, message = "Login Failed" });
+                }
 
                 //get cartId of User's cart
                 var cartId = await context.Carts
@@ -55,21 +61,19 @@ namespace eCommerceCore.Controllers
                 }
                 else
                 {
-                    throw new Exception("Cart Not Found");
+                    return BadRequest(new { success = false, message = "Cart Not Found" });
                 }
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                resp.Success = false;
-                resp.Message = exception.Message;
+                return BadRequest(new { success = false, message = "Invalid Request" });
             }
-            return resp;
+            return Ok(new { success = resp.Success , data = resp.Data });
         }
-
 
         // POST: api/Cart
         [HttpPost]
-        async public Task<Response> Post([FromBody] ProductObject data)
+        async public Task<IActionResult> Post([FromBody] ProductObject data)
         {
             var resp = new Response { };
             try
@@ -80,7 +84,7 @@ namespace eCommerceCore.Controllers
                 //check if userId is null
                 if (userId == null)
                 {
-                    throw new Exception("Login Failed");
+                    return BadRequest(new { success = false, message = "Login Failed" });
                 }
                 
                 //get Current CartId
@@ -89,27 +93,34 @@ namespace eCommerceCore.Controllers
 
                 if (cartId != null)
                 {
-                    //check product existance in product table
-                    var productExist = await context.Products
-                                .FirstOrDefaultAsync(p => p.Id == data.ProductId);
-                    if (productExist != null)
+                    //check for data
+                    if (CheckUserData(data))
                     {
-                        CartDetails cartDetails = new CartDetails
+                        //check product existance in product table
+                        var productExist = await context.Products
+                                    .FirstOrDefaultAsync(p => p.Id == data.ProductId);
+                        if (productExist != null)
                         {
-                            ProductId = productExist.Id,
-                            CartId = cartId.Id,
-                            Quantities = data.Quantities,
-                            CurrentPrice = productExist.Pricing
-                        };
-                        await context.CartsDetails.AddAsync(cartDetails);
-                        context.SaveChanges();
-                        resp.Success = true;
-                        resp.Message = "Cart Found and Product Saved successfully";
+                            CartDetails cartDetails = new CartDetails
+                            {
+                                ProductId = productExist.Id,
+                                CartId = cartId.Id,
+                                Quantities = data.Quantities,
+                                CurrentPrice = productExist.Pricing
+                            };
+                            await context.CartsDetails.AddAsync(cartDetails);
+                            context.SaveChanges();
+                            resp.Success = true;
+                            resp.Message = "Cart Found and Product Saved successfully";
+                        }
+                        else
+                        {
+                            return BadRequest(new { success = false, message = "Product Does't Exist" });
+                        }
                     }
                     else
                     {
-                        resp.Success = false;
-                        resp.Message = "Product Does't Exist";
+                        return BadRequest(new { success = false, message = "Incorrect ProductId/Quantities" });
                     }
                 }
                 else
@@ -141,23 +152,32 @@ namespace eCommerceCore.Controllers
                         }
                         else
                         {
-                            resp.Success = false;
-                            resp.Message = "Product Does't Exist";
+                            return BadRequest(new { success = false, message = "Product Does't Exist" });
                         }
                     }
                     catch (Exception exception)
                     {
-                        resp.Success = false;
-                        resp.Message = exception.Message;
+                        return BadRequest(new { success = false, message = exception.Message });
                     }               
                 }
             }
             catch (Exception exception)
             {
-                resp.Success = false;
-                resp.Message = exception.Message;
+                return BadRequest(new { success = false, message = exception.Message });
             }
-            return resp;
+            return Ok(new { success = resp.Success , message = resp.Message });
+        }
+
+        public bool CheckUserData(ProductObject data)
+        {
+            if (data.ProductId > 0 && data.Quantities > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         // DELETE: api/ApiWithActions/5
