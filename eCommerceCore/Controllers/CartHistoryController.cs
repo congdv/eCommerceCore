@@ -18,12 +18,18 @@ namespace eCommerceCore.Controllers
 
         // GET: api/Cart
         [HttpGet]
-        async public Task<Response> Get()
+        async public Task<IActionResult> Get()
         {
             var resp = new Response { };
             try
             {
                 var userId = HttpContext.Session.GetInt32("UserId");
+
+                //check if userId is null
+                if (userId == null)
+                {
+                    return BadRequest(new { success = false, message = "Login Failed" });
+                }
 
                 //get cartId of User's cart with cart status true
                 var cartId = await context.Carts
@@ -54,15 +60,14 @@ namespace eCommerceCore.Controllers
                 }
                 else
                 {
-                    throw new Exception("Cart Not Found");
+                    return BadRequest(new { success = false, message = "Cart Not Found" });
                 }
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                resp.Success = false;
-                resp.Message = exception.Message;
+                return BadRequest(new { success = false, message = "Invalid Request" });
             }
-            return resp;
+            return Ok(new { success = resp.Success, data = resp.Data});
         }
     }
 }
