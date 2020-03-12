@@ -45,12 +45,12 @@ namespace eCommerceCore.Controllers
                 }
                 else
                 {
-                    return BadRequest(new { success = false, message = "Product was not found" });
+                    return BadRequest(new { success = false, message = "Comments are not availble for this product" });
                 }
             }
             catch (Exception)
             {
-                return BadRequest(new { success = false, message = "Comment fetch problem" });
+                return BadRequest(new { success = false, message = "Comment could not be fetched at this time" });
             }
         }
 
@@ -64,14 +64,17 @@ namespace eCommerceCore.Controllers
             
             if (cartId == null)
             {
-                return BadRequest(new { success = false, message = "User did not purchased the product" });
+                return BadRequest(new { success = false, message = "User should login first" });
             }
-            var productExist =  (from c in context.Carts
-                                      join cd in context.CartsDetails on c.Id equals cartId.Id
-                                      where c.UserId == userId 
-                                      select cd.ProductId).Distinct().ToList();
-
-            if (productExist != null)
+            List<int> verifyPurchase = (from c in context.Carts
+                                  join cd in context.CartsDetails 
+                                  on c.Id equals cartId.Id
+                                          where c.UserId == userId
+                                          && c.CartStatus == true
+                                          && cd.ProductId == data.ProductId
+                                  select cd.ProductId).Distinct().ToList();
+ 
+            if (verifyPurchase.Count() > 0)
             {
                 Comment comment = new Comment
                 {
@@ -83,12 +86,11 @@ namespace eCommerceCore.Controllers
                 };
                 context.Comments.Add(comment);
                 await context.SaveChangesAsync();
-                return Ok(new { sucess = true, message = "Comment Added Sucessfully" });
+                return Ok(new { sucess = true, message = "Comment added sucessfully" });
             }
-
             else
             {
-                return BadRequest(new { success = false, message = "Product not associated to User" });
+                return BadRequest(new { success = false, message = "User is not authorized to comment about this product" });
             }
         }
     }
