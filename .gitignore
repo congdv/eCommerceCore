@@ -340,5 +340,5 @@ ASALocalRun/
 healthchecksdb
 
 # For Core Project
-**/appsettings.Development.json
+*.Development.json
 **/Migrations/*
