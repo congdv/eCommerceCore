@@ -22,12 +22,21 @@ namespace eCommerceCore.Controllers
         {
             try
             {
-                List<Comment> comments = context.Comments.ToList();
-                if (comments == null)
+                var productID = context.Products.FirstOrDefault(prod => prod.Id == id);
+                if(productID!=null)
                 {
-                    return BadRequest(new { success = false, message = "Comments not found" });
+                    //LINQ query here for specific product comment
+                    List<Comment> comments = context.Comments.ToList();
+                    if (comments == null)
+                    {
+                        return BadRequest(new { success = false, message = "Comments not found" });
+                    }
+                    return Ok(comments);
                 }
-                return Ok(comments);
+                else
+                {
+                    return BadRequest(new { success = false, message = "Product was not found" });
+                }
             }
             catch (Exception)
             {
