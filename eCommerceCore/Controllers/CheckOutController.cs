@@ -18,7 +18,7 @@ namespace eCommerceCore.Controllers
 
         //Cart Items Checkout
         // Post: api/Checkout
-        async public Task<Response> Post([FromBody] Cart data)
+        async public Task<IActionResult> Post([FromBody] Cart data)
         {
             var resp = new Response { };
             try
@@ -29,7 +29,7 @@ namespace eCommerceCore.Controllers
                 //check if userId is null
                 if (userId == null)
                 {
-                    throw new Exception("Login Failed");
+                    return BadRequest(new { success = false, message = "Login Failed" });
                 }
 
                 //check cart status existance
@@ -46,25 +46,23 @@ namespace eCommerceCore.Controllers
                         cartExist.CartStatus = true;
                         await context.SaveChangesAsync();
                         resp.Success = true;
-                        resp.Message = "Cart Status Updated successfully";
+                        resp.Message = "Cart Checked Out successfully";
                     }
                     else
                     {
-                        throw new Exception("Data Missing");
+                        return BadRequest(new { success = false, message = "Incorrect ShippingAddress/PaymentMethod" });
                     }
                 }
                 else
                 {
-                    resp.Success = false;
-                    resp.Message = "Your Cart is Empty";
+                    return BadRequest(new { success = false, message = "Your Cart is Empty" });
                 }
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                resp.Success = false;
-                resp.Message = exception.Message;
+                return BadRequest(new { success = false, message = "Invalid Request" });
             }
-            return resp;
+            return Ok(new { success = resp.Success, message = resp.Message });
         }
     }
 }
