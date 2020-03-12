@@ -94,7 +94,7 @@ namespace eCommerceCore.Controllers
                 if (cartId != null)
                 {
                     //check for data
-                    if (data.ProductId > 0 && data.Quantities > 0)
+                    if (CheckUserData(data))
                     {
                         //check product existance in product table
                         var productExist = await context.Products
@@ -166,6 +166,18 @@ namespace eCommerceCore.Controllers
                 return BadRequest(new { success = false, message = exception.Message });
             }
             return Ok(new { success = resp.Success , message = resp.Message });
+        }
+
+        public bool CheckUserData(ProductObject data)
+        {
+            if (data.ProductId > 0 && data.Quantities > 0)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         // DELETE: api/ApiWithActions/5
