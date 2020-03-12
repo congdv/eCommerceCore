@@ -115,13 +115,12 @@ namespace eCommerceCore.Controllers
                         }
                         else
                         {
-                            resp.Success = false;
-                            resp.Message = "Product Does't Exist";
+                            return BadRequest(new { success = false, message = "Product Does't Exist" });
                         }
                     }
                     else
                     {
-                        return BadRequest(new { success = false, data = resp.Data });
+                        return BadRequest(new { success = false, message = "Incorrect ProductId/Quantities" });
                     }
                 }
                 else
@@ -153,23 +152,20 @@ namespace eCommerceCore.Controllers
                         }
                         else
                         {
-                            resp.Success = false;
-                            resp.Message = "Product Does't Exist";
+                            return BadRequest(new { success = false, message = "Product Does't Exist" });
                         }
                     }
                     catch (Exception exception)
                     {
-                        resp.Success = false;
-                        resp.Message = exception.Message;
+                        return BadRequest(new { success = false, message = exception.Message });
                     }               
                 }
             }
             catch (Exception exception)
             {
-                resp.Success = false;
-                resp.Message = exception.Message;
+                return BadRequest(new { success = false, message = exception.Message });
             }
-            return Ok(new { success = resp.Success });
+            return Ok(new { success = resp.Success , message = resp.Message });
         }
 
         // DELETE: api/ApiWithActions/5
