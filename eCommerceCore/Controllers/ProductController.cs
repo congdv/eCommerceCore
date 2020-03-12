@@ -14,8 +14,6 @@ namespace eCommerceCore.Controllers
     {
         private readonly AppDbContext context;
         public ProductController(AppDbContext context) => this.context = context;
-                              
-
 
         // GET: api/product
         [HttpGet]
@@ -47,18 +45,63 @@ namespace eCommerceCore.Controllers
                 }
                 else if (product == null)
                 {
-                    return Ok(new { success = false, message = "Product Not Found!" });
+                    return BadRequest(new { success = false, message = "Product Not Found!" });
                 }
                 else
                 {
                     return (Product)product;
                 }
-                
+
             }
-            catch(Exception)
+            catch (Exception)
             {
                 return BadRequest(new { success = false, message = "Invalid Request" });
             }
         }
+
+        
+        // POST: api/Product/Add
+        [HttpPost]
+        public async Task<RegisterResponse> Post([FromBody] Product product)
+        {
+
+            var resp = new RegisterResponse { Success = false };
+
+            try
+            {
+                if (!string.IsNullOrEmpty(product.Description) &&
+                    !string.IsNullOrEmpty(product.ImagePath) &&
+                    !string.IsNullOrEmpty(product.ProductName) &&
+                    product.Pricing != 0)
+                {
+                    await context.Products.AddAsync(product);
+                    await context.SaveChangesAsync();
+                    resp.Success = true;
+                    resp.Message = "Successfully added new product";
+                }
+
+                else
+                {
+                    resp.Success = false;
+                    resp.Message = "All product specs not provided";
+                }
+            }
+
+            catch (Exception exception)
+            {
+                resp.Message = exception.Message;
+                resp.Success = false;
+            }
+
+            return resp;
+
+        }
+
+        public class ProductResponse
+        {
+            public bool Success { get; set; }
+            public string Message { get; set; }
+        }
     }
+
 }
