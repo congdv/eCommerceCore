@@ -11,6 +11,7 @@ namespace eCommerceCore.Models
         public int UserId { get; set; }
         public int ProductId { get; set; }
         public string Comments { get; set; }
+        public string CommentImagePath { get; set; }
         public float Rating { get; set; }
     }
 }
