@@ -182,8 +182,44 @@ namespace eCommerceCore.Controllers
 
         // DELETE: api/ApiWithActions/5
         [HttpDelete("{id}")]
-        public void Delete(int id)
+        async public Task<IActionResult> Delete(int id)
         {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            var cartId = await context.Carts.FirstOrDefaultAsync(b => b.CartStatus == false && b.UserId == userId);
+            if (userId == null)
+            {
+                return BadRequest(new { success = false, message = "Login Failed" });
+            }
+            else
+            {
+                if (cartId != null)
+                {
+                    var productExist = await context.CartsDetails.FirstOrDefaultAsync(cd => cd.ProductId == id && cd.CartId == cartId.Id);
+                    if (productExist != null)
+                    {
+                        context.CartsDetails.Remove(productExist);
+                        if(IsCartEmpty(cartId))
+                        {
+                            context.Carts.Remove(cartId);
+                        }
+                        await context.SaveChangesAsync();
+                        return Ok(new { success = true, message = "Product Removed successfully" });
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+        }
+        public bool IsCartEmpty(Cart cart)
+        {
+            var cr = context.CartsDetails.FirstOrDefaultAsync(cd => cd.CartId == cart.Id);
+            return cr == null;
         }
     }
     public class ProductObject
