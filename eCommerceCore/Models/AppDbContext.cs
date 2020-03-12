@@ -10,7 +10,6 @@ namespace eCommerceCore.Models
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> opt) : base(opt) { }
-
         protected override void OnModelCreating(ModelBuilder mb)
         {
             foreach (var rel in mb.Model.GetEntityTypes().SelectMany(f => f.GetForeignKeys()))
@@ -23,11 +22,11 @@ namespace eCommerceCore.Models
 
             base.OnModelCreating(mb);
         }
-
         public DbSet<User> Users { get; set; }
-
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartDetails> CartsDetails { get; set; }
         public DbSet<Product>  Products { get; set; }
+
+        public DbSet<Comment> Comments { get; set; }
     }
 }

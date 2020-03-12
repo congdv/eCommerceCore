@@ -9,6 +9,7 @@ namespace eCommerceCore.Models
 {
     public class CartDetails
     {
+
         [Key]
         public int id { get; set; }
 
