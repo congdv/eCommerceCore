@@ -342,3 +342,5 @@ healthchecksdb
 # For Core Project
 *.Development.json
 **/Migrations/*
+/eCommerceCore/appsettings.Development.json
+/eCommerceCore
