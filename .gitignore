@@ -343,4 +343,3 @@ healthchecksdb
 *.Development.json
 **/Migrations/*
 /eCommerceCore/appsettings.Development.json
-/eCommerceCore
