@@ -17,5 +17,10 @@ namespace eCommerceCore.Models
         public DateTime PurchasedDate { get; set; }
         public string PaymentMethod { get; set; }
         public virtual ICollection<CartDetails> CartDetails { get; set; }
+
+        public static explicit operator int(Cart v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

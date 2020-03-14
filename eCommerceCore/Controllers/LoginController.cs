@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using eCommerceCore.Exceptions;
 using eCommerceCore.Library;
 using eCommerceCore.Models;
 using Microsoft.AspNetCore.Http;
@@ -19,10 +20,8 @@ namespace eCommerceCore.Controllers
 
         // POST: api/Login
         [HttpPost]
-        public async Task<LoginResponse> Post([FromBody] LoginData data)
+        public async Task<IActionResult> Post([FromBody] User data)
         {
-            var resp = new LoginResponse { Success = true };
-
             try
             {
                 var user = context.Users.FirstOrDefault(u => u.Username == data.Username);
@@ -34,38 +33,20 @@ namespace eCommerceCore.Controllers
                         await HttpContext.Session.LoadAsync();
                         HttpContext.Session.SetInt32("UserId", user.Id);
                         await HttpContext.Session.CommitAsync();
-
-                        resp.Success = true;
-                        resp.Message = "Successfully Login";
                     } else
                     {
-                        resp.Success = false;
-                        resp.Message = "Wrong Password";
+                        throw new BadRequestException("Invalid Username/Password");
                     }
                 } else
                 {
-                    resp.Success = false;
-                    resp.Message = "Wrong Username";
+                    throw new BadRequestException("Invalid Username/Password");
                 }
-            }catch (Exception exception)
+            }catch (BadRequestException exception)
             {
-                resp.Success = false;
-                resp.Message = exception.Message;
+                return BadRequest(new { success = false, message = exception.Message });
             }
-            return resp; 
+            return Ok( new { succes =  true, message = "Successfully logged in" }); 
         }
 
-    }
-
-    public class LoginData
-    {
-        public string Username { get; set; }
-        public string Password { get; set; }
-    }
-
-    public class LoginResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
     }
 }

@@ -7,51 +7,65 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace eCommerceCore.Controllers
 {
-    [Route("api/Image")]
+    [Route("api/upload")]
     [ApiController]
     public class ImageUploadController : ControllerBase
     {
         [HttpPost]
-        public async Task<ImageUploadResponse> Post([FromQuery]FIleUploadAPI uploadFile)
+        public async Task<IActionResult> Post([FromQuery] FileUpload fileUpload)
         {
-            var resp = new ImageUploadResponse { Success = false, Message = "No file to upload" };
-            if (uploadFile.file.Length > 0)
+            var userId = HttpContext.Session.GetInt32("UserId");
+
+            //check if userId is null
+            if (userId == null)
+            {
+                return BadRequest(new { success = false, message = "Login Failed" });
+            }
+            bool isSuccess = false;
+            if (fileUpload.file != null && fileUpload.file.Length > 0)
             {
                 try
                 {
-                    int index = uploadFile.file.FileName.LastIndexOf(".");
-                    string extn = uploadFile.file.FileName.Substring(index);
-                    var filePath = Path.Combine("wwwroot\\assesst", Path.GetRandomFileName() + extn);
+                    int index = fileUpload.file.FileName.LastIndexOf(".");
+                    string extensionName = fileUpload.file.FileName.Substring(index);
+                    var directoryPath = Path.Combine(@"wwwroot\assets");
+                    if(!Directory.Exists(directoryPath))
+                    {
+                        Directory.CreateDirectory(directoryPath);
+                    }
+                    var filePath = Path.Combine(@"wwwroot\assets", Path.GetRandomFileName() + extensionName);
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
-                        await uploadFile.file.CopyToAsync(stream);
-                        
-                        resp.Success = true;
-                        resp.Message = filePath.ToString();
+                        await fileUpload.file.CopyToAsync(stream);
+                        isSuccess = true;
                     }
+                    if (isSuccess)
+                    {
+                        return Ok(new { success = true, message = "Successfully uploaded image", data = filePath.ToString() });
+
+                    }
+                    else
+                    {
+                        return BadRequest(new { success = false, message = "Failed to upload image" });
+                    }
+
                 }
                 catch (Exception ex)
                 {
-                    resp.Success = false;
-                    resp.Message = ex.Message;
+                    return BadRequest(new { success = false, message = ex.Message});
                 }
             }
             else
             {
-                resp.Success = false;
-                resp.Message = "No file to upload";
+                return BadRequest(new { success = false, message = "The image is not valid" });
             }
-            return resp;
+
+           
         }
     }
 
-    public class ImageUploadResponse
-    {
-        public bool Success { get; set; }
-        public string Message { get; set; }
-    }
 
-    public class FIleUploadAPI
+    public class FileUpload
     {
         public IFormFile file { get; set; }
     }

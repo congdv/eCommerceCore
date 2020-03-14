@@ -17,54 +17,57 @@ namespace eCommerceCore.Controllers
         private readonly AppDbContext context;
 
         public UserController(AppDbContext context) => this.context = context;
-        /*// GET: api/User
-        [HttpGet]
-        public IEnumerable<string> Get()
-        {
-            return new string[] { "value1", "value2" };
-        }
 
-        // GET: api/User/5
-        [HttpGet("{id}", Name = "GetUser")]
-        public string Get(int id)
+        // Get user profile
+       [HttpGet]
+        public async Task<IActionResult> Get()
         {
-            return "value";
+            var userID = HttpContext.Session.GetInt32("UserId");
+            if (userID == null)
+            {
+                return BadRequest(new { success = false, message = "Invalid authentication" });
+            }
+            var user = context.Users.FirstOrDefault(u => u.Id == userID);
+            var responseUser = new { FirstName = user.FirstName, LastName = user.LastName, Email = user.Email, ShippingAddress = user.ShippingAddress };
+            return Ok(new { success = true, message = "User's Profile", data = responseUser });
         }
-        */
         // POST: api/User
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] UpdateData data)
         {
-            var resp = new UpdateResponse { Success = true };
             var userID = HttpContext.Session.GetInt32("UserId");
             if (userID == null)
             {
-                throw new Exception("Invalid authentication");
+                return BadRequest( new { success = false, message = "Invalid authentication" });
             }
-            else
+
+            var user = context.Users.FirstOrDefault(u => u.Id == userID);
+
+            // Requiring enter password when the user tries to update their profile
+            if(string.IsNullOrEmpty(data.Password) || !PasswordHash.VerifyHashedPassword(user.Password, data.Password))
             {
-                var user = context.Users.FirstOrDefault(u => u.Id == userID);
-                if (user != null)
+                return BadRequest(new { success = false, message = "Invalid password" });
+            }
+            
+            if (user != null)
+            {
+                user.FirstName = data.FirstName;
+                user.LastName = data.LastName;
+                user.ShippingAddress = data.ShippingAddress;
+                user.Email = data.Email;
+                if (user.FirstName != "" && user.LastName != "" && user.ShippingAddress != "" && user.Email != "")
                 {
-                    user.FirstName = data.FirstName;
-                    user.LastName = data.LastName;
-                    user.Password = PasswordHash.HashPassword(data.Password);
-                    user.ShippingAddress = data.ShippingAddress;
-                    user.Email = data.Email;
-                    if (user.FirstName != "" && user.FirstName != "" && user.Password != "" && user.ShippingAddress != "" && user.Email != "")
-                    {
-                        await context.SaveChangesAsync();
-                        return Ok(new { sucess = true, message = "Data Succesfully Changed" });
-                    }
-                    else
-                    {
-                        return BadRequest(new { success = false, message = "Data is Missing" });
-                    }
+                    await context.SaveChangesAsync();
+                    return Ok(new { sucess = true, message = "Successfully updated user" });
                 }
                 else
                 {
-                    return BadRequest(new { success = false, message = "Wrong Inputs for Update data" });
+                    return BadRequest(new { success = false, message = "Data is Missing" });
                 }
+            }
+            else
+            {
+                return BadRequest(new { success = false, message = "Wrong Inputs for Update data" });
             }
         }
 
@@ -95,12 +98,8 @@ namespace eCommerceCore.Controllers
             }
         }
 
-        // DELETE: api/ApiWithActions/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
+    
     public class UpdateData
     {
         public string Email { get; set; }

@@ -28,5 +28,7 @@ namespace eCommerceCore.Models
         public DbSet<Product>  Products { get; set; }
 
         public DbSet<Comment> Comments { get; set; }
+
+        public DbSet<ImagePath> ImagePaths { get; set; }
     }
 }

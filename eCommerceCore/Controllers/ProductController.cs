@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 using eCommerceCore.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace eCommerceCore.Controllers
 {
-    [Route("api/Product")]
+    [Route("api/[controller]")]
     [ApiController]
     public class ProductController : ControllerBase
     {
@@ -31,41 +32,40 @@ namespace eCommerceCore.Controllers
         }
 
         // GET: api/Product/5
-        [HttpGet("{id}", Name = "GetProduct")]
-        public ActionResult<Product> Get(int id)
+        [HttpGet("{id}")]
+        public async Task<IActionResult> Get(int id)
         {
+            if (id.GetType() == typeof(System.String))
+            {
+                return BadRequest(new { success = false, message = "Invalid Request" });
+            }
+
             try
             {
                 int productId = id;
-                var product = context.Products.FirstOrDefault(prod => prod.Id == id);
-
-                if (id.GetType() == typeof(System.String))
+                Product product = await context.Products.FirstOrDefaultAsync(prod => prod.Id == id);
+                
+                if (product == null)
                 {
-                    return BadRequest(new { success = false, message = "Invalid Request" });
-                }
-                else if (product == null)
-                {
-                    return BadRequest(new { success = false, message = "Product Not Found!" });
+                    return NotFound();
                 }
                 else
                 {
-                    return (Product)product;
+                    return Ok(new { success=true, message="Detail Product", data=product });
                 }
 
             }
-            catch (Exception)
+            catch (Exception exception)
             {
-                return BadRequest(new { success = false, message = "Invalid Request" });
+                return BadRequest(new { success = false, message = exception.Message });
             }
         }
 
         
-        // POST: api/Product/Add
+        // POST: api/Product/
         [HttpPost]
-        public async Task<RegisterResponse> Post([FromBody] Product product)
+        public async Task<IActionResult> Post([FromBody] Product product)
         {
-
-            var resp = new RegisterResponse { Success = false };
 
             try
             {
@@ -76,32 +76,21 @@ namespace eCommerceCore.Controllers
                 {
                     await context.Products.AddAsync(product);
                     await context.SaveChangesAsync();
-                    resp.Success = true;
-                    resp.Message = "Successfully added new product";
-                }
-
-                else
+                } else
                 {
-                    resp.Success = false;
-                    resp.Message = "All product specs not provided";
+                    throw new Exception("All product specs not provided");
                 }
             }
 
             catch (Exception exception)
             {
-                resp.Message = exception.Message;
-                resp.Success = false;
+                return BadRequest(new { success = false, message = exception.Message });
             }
 
-            return resp;
+            return Ok(new { success = true, message = "Successfully added new product" });
 
         }
 
-        public class ProductResponse
-        {
-            public bool Success { get; set; }
-            public string Message { get; set; }
-        }
     }
 
 }

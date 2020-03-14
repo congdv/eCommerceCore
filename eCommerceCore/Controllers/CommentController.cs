@@ -23,25 +23,23 @@ namespace eCommerceCore.Controllers
             try
             {
                 var product = context.Products.FirstOrDefault(prod => prod.Id == id);
-                var userId = HttpContext.Session.GetInt32("UserId");
                 if (product!=null)
                 {
                     //LINQ query here for specific product comment
                     //List<Comment> comments = context.Comments.ToList();
-                    List<Comment> comments;
-                    comments = (from c in context.Comments
-                                join u in context.Users on c.UserId equals userId
-                                where c.ProductId == id
-                                select new Comment
+                    var comments = (from comment in context.Comments
+                                join user in context.Users on comment.UserId equals user.Id
+                                where comment.ProductId == id
+                                select new
                                 {
-                                    Id = c.Id,
-                                    UserId = c.UserId,
+                                    Id = comment.Id,
+                                    UserName = user.Username,
                                     ProductId = id,
-                                    Comments = c.Comments,
-                                    CommentImagePath = c.CommentImagePath,
-                                    Rating = c.Rating
+                                    Comment = comment.Content,
+                                    ImagePaths = comment.ImagePaths.Select(path => path.Path),
+                                    Rating = comment.Rating
                                 }).ToList();
-                    return Ok(comments);
+                    return Ok( new { success = true, message = "All comments", data = comments });
                 }
                 else
                 {
@@ -56,23 +54,22 @@ namespace eCommerceCore.Controllers
 
         // POST: api/comment
         [HttpPost]
-        public async Task<IActionResult> CommentPost([FromBody] CommentData data)
+        public async Task<IActionResult> PostComment([FromBody] CommentData data)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
-            //get cart id
-            var cartId = await context.Carts.FirstOrDefaultAsync(b => b.CartStatus == true && b.UserId == userId);
             
-            if (cartId == null)
+            if (userId == null)
             {
                 return BadRequest(new { success = false, message = "User should login first" });
             }
-            List<int> verifyPurchase = (from c in context.Carts
-                                  join cd in context.CartsDetails 
-                                  on c.Id equals cartId.Id
-                                          where c.UserId == userId
-                                          && c.CartStatus == true
-                                          && cd.ProductId == data.ProductId
-                                  select cd.ProductId).Distinct().ToList();
+
+            //get cart id
+            List<int> verifyPurchase = (from cart in context.Carts
+                                        join cartDetail in context.CartsDetails on cart.Id equals cartDetail.CartId
+                                          where cart.UserId == userId
+                                          && cart.CartStatus == true
+                                          && cartDetail.ProductId == data.ProductId
+                                        select cartDetail.ProductId).Distinct().ToList();
  
             if (verifyPurchase.Count() > 0)
             {
@@ -80,12 +77,25 @@ namespace eCommerceCore.Controllers
                 {
                     UserId = (int)userId,
                     ProductId = data.ProductId,
-                    Comments = data.Comments,
-                    CommentImagePath = data.CommentImagePath,
+                    Content = data.Comment,
                     Rating = data.Rating
                 };
                 context.Comments.Add(comment);
                 await context.SaveChangesAsync();
+                if(data.ImagePaths != null)
+                {
+                    foreach (string path in data.ImagePaths)
+                    {
+                        ImagePath imagePath = new ImagePath()
+                        {
+                            Path = path,
+                            Comment = comment
+                        };
+                        context.ImagePaths.Add(imagePath);
+                    }
+                    await context.SaveChangesAsync();
+                }
+                
                 return Ok(new { sucess = true, message = "Comment added sucessfully" });
             }
             else
@@ -96,10 +106,9 @@ namespace eCommerceCore.Controllers
     }
     public class CommentData
     {
-        public int UserId { get; set; }
         public int ProductId { get; set; }
-        public string Comments { get; set; }
-        public string CommentImagePath { get; set; }
+        public string Comment { get; set; }
+        public List<string> ImagePaths { get; set; }
         public float Rating { get; set; }
     }
     public class CommentResponse
